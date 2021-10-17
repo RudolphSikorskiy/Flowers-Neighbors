@@ -1,0 +1,4 @@
+aiogram>=2.12,<3.0
+aiogram_calendar
+# for django connections
+asgiref
