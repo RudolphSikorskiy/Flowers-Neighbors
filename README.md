@@ -44,16 +44,24 @@ Uses gunicorn + nginx.
     ```
 Test it out at [http://localhost:1337](http://localhost:1337). No mounted folders. To apply changes, the image must be re-built.
 
+### Save and Load via .tar 
+```sh
+    docker save 34fb1b2429d9 > bot.tar
+    docker load --input verse_gapminder.tar
+```
+### TAG and Push to DockerHUB 
+```sh
+    docker images
+    docker login
+    docker tag IMAGE_ID_bb38976d03cf softhardsolutions/web:version
+    docker push softhardsolutions/web
+```
 ### Clear
-1. ```sh
+```sh
     docker-compose down --volumes
-    ```
-2. ```sh
     docker system prune --all
-    ```
-3. ```sh
     docker system df
-    ```
+```
 
 ### Temporary environment
 ```sh

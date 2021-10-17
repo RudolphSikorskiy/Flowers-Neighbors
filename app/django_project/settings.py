@@ -131,5 +131,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # TELEGRAM ENV----------------------------------------------------------------------------------------------------------
 
-BOT_TOKEN = '1016008963:AAGPz4bTMH3GazObN4d9Pz0U8lATgvn4zrM'
-ADMIN_ID = 319555949
+# BOT_TOKEN = '1016008963:AAGPz4bTMH3GazObN4d9Pz0U8lATgvn4zrM'
+# ADMIN_ID = 319555949
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "localhost")
+ADMIN_ID = int(os.environ.get("ADMIN_ID", default=0))
