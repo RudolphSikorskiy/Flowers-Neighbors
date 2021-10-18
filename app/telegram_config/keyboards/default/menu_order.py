@@ -51,7 +51,36 @@ def products(data):
                                )
             ]
         )
-    buttons.append([KeyboardButton(text='Выбрать другой цеовой диапазон')])
+    buttons.append([KeyboardButton(text='Выбрать другой ценовой диапазон')])
+    return ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=True
+    )
+
+
+def key_builder(data, key):
+    buttons = []
+    for item in data:
+        buttons.append(
+            [
+                KeyboardButton(text=f'{item[key]}')
+            ]
+        )
+    return ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=True
+    )
+
+
+def key_builder_stores(data):
+    buttons = []
+    for item in data:
+        buttons.append(
+            [
+                KeyboardButton(text=f'{item["name"]}, {item["city"]}, ул,{item["street"]}, дом {item["house"]}'),
+            ]
+        )
+    buttons.append([KeyboardButton(text='Выбрать другой город')])
     return ReplyKeyboardMarkup(
         keyboard=buttons,
         resize_keyboard=True
