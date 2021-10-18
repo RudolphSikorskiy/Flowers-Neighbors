@@ -1,11 +1,13 @@
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 
-class ExampleFMS(StatesGroup):
-    start = State()
-    iter_1 = State()
-    iter_2 = State()
-    iter_3 = State()
-    iter_4 = State()
-    iter_5 = State()
-    finfsh = State()
+class Funnel(StatesGroup):
+    delivery_address = State()
+    price_range = State()
+    chose_product = State()
+    set_date = State()
+    set_time = State()
+    contact_phone = State()
+    is_order_confirm = State()
+    order_confirm = State()
+
