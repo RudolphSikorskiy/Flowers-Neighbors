@@ -20,6 +20,9 @@ services:
       context: ./app
       dockerfile: Dockerfile.prod
     command: python manage.py runbot
+    volumes:
+      - static_volume:/home/app/web/staticfiles
+      - media_volume:/home/app/web/mediafiles
     env_file:
       - ./.env.prod
     depends_on:
