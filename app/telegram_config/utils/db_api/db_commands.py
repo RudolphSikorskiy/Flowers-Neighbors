@@ -1,7 +1,7 @@
 from asgiref.sync import sync_to_async
 import logging
 
-from django_app.models import Customer, Product, Manager, Order
+from django_app.models import Customer, Product, Manager, Order, Store
 from decimal import Decimal
 
 log = logging.getLogger(__name__)
@@ -82,7 +82,18 @@ def add_order(customer_id, product_id, telegram_id, shipping_address,
                  email=email).save()
 
 
+@sync_to_async
+def select_all_cities():
+    cities = Store.objects.order_by().values('city').distinct()
+    return list(cities)
 
+
+@sync_to_async
+def select_all_stores(city):
+
+    stores = Store.objects.values('id', 'name', 'city', 'street', 'house').filter(city=city)
+    log.warning(list(stores))
+    return list(stores)
 
 # 1. You should import models from django app
 # from makret.models import Customer
