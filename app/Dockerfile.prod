@@ -53,6 +53,7 @@ WORKDIR $APP_HOME
 # install dependencies
 # install psycopg2 dependencies
 RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev && apk update && apk add libpq
+RUN apk add zlib-dev jpeg-dev gcc musl-dev
 
 # COPY --from=builder /usr/src/app/wheels /wheels
 # COPY --from=builder /usr/src/app/requirements.txt .
