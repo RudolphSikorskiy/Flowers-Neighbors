@@ -15,7 +15,7 @@ async def bot_start(message: types.Message):
     try:
         await add_customer(fullname=fullname, username=username, telegram_id=telegram_id)
     except Exception as err:
-        log.info(f'telegram_id={telegram_id}, {fullname}, {username}: {err}')
+        log.error(f'telegram_id={telegram_id}, {fullname}, {username}: {err}')
         await dp.bot.send_message(ADMIN_ID,
                                   f"К нам вернулся покупатель:\n"
                                   f"Telegram ID: <code>{telegram_id}</code>\n"
@@ -33,4 +33,5 @@ async def bot_start(message: types.Message):
                                   f"Телефон: <code>{customer['phone']}</code>\n"
                                   f"Email: <code>{customer['email']}</code>\n"
                                   )
+
     await message.answer(f'Привет, {message.from_user.full_name}!\nИспользуй /order чтобы сделать заказ')
