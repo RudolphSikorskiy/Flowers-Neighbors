@@ -8,7 +8,7 @@ from telegram_config.keyboards.default import menu_order
 from telegram_config.keyboards.default.menu_order import COSTS_FILTERS
 from telegram_config.loader import dp, bot
 from telegram_config.states.states import Funnel
-from telegram_config.utils.db_api.db_commands import select_products, select_all_managers, select_customer, add_order
+from telegram_config.utils.db_api import db_commands
 from typing import Dict
 import datetime
 import logging
@@ -20,39 +20,52 @@ log = logging.getLogger(__name__)
 
 @dp.message_handler(Command('order'))
 async def start_order(message: Message):
-    await message.answer(f"Создадим заказ\n"
-                         f"Введите адрес доставки в заданном формате:\n"
-                         f"<code>Садовая 21</code>.\n"
-                         f"Или передайте свои координаты",
-                         reply_markup=menu_order.delivery_point
-                         )
+    # Get all market's city in application
+    cities = await db_commands.select_all_cities()
+    # Create keyboard
+    keyboard = menu_order.key_builder(cities, 'city')
 
+    await message.answer(f"Создание заказа...\nУкажите город", reply_markup=keyboard)
     await Funnel.next()
 
 
-@dp.message_handler(state=Funnel.delivery_address, content_types=types.ContentType.LOCATION)
-async def set_price_range(message: Message, state: FSMContext):
-    await message.answer(f"Выберите ценовой диапазон\n", reply_markup=menu_order.chose_cost)
-
-    location = message.location
-    latitude = location.latitude
-    longitude = location.longitude
-    async with state.proxy() as data:
-        data['delivery_address'] = (latitude, longitude)
-    await Funnel.next()
-
-
-@dp.message_handler(state=Funnel.delivery_address)
-async def set_price_range(message: Message, state: FSMContext):
-    await message.answer(f"Выберите ценовой диапазон\n", reply_markup=menu_order.chose_cost)
-
+@dp.message_handler(state=Funnel.market)
+async def set_market(message: Message, state: FSMContext):
     answer = message.text
     async with state.proxy() as data:
-        data['delivery_address'] = answer
+        data['City'] = answer
+
+    # Get all stores in current city
+    stores = await db_commands.select_all_stores(answer)
+
+    keyboard = menu_order.key_builder_stores(stores)
+    await message.answer(f"Укажите магазин", reply_markup=keyboard)
+
     await Funnel.next()
 
 
 @dp.message_handler(state=Funnel.price_range)
+async def set_price_range(message: Message, state: FSMContext):
+    answer = message.text
+    if answer == 'Выбрать другой город':
+        # Get all market's city in application
+        cities = await db_commands.select_all_cities()
+        # Create keyboard
+        keyboard = menu_order.key_builder(cities, 'city')
+
+        await message.answer(f"Создание заказа...\nУкажите город", reply_markup=keyboard)
+        await Funnel.first()
+
+    else:
+        async with state.proxy() as data:
+            data['Store'] = answer
+
+        await message.answer(f"Выберите ценовой диапазон\n", reply_markup=menu_order.chose_cost)
+
+        await Funnel.next()
+
+
+@dp.message_handler(state=Funnel.chose_product)
 async def set_chose_product(message: Message, state: FSMContext):
     answer = message.text
     fullname = message.from_user.full_name
@@ -61,7 +74,8 @@ async def set_chose_product(message: Message, state: FSMContext):
 
     for item in COSTS_FILTERS.keys():
         if answer in COSTS_FILTERS[item][0]:
-            product = await select_products(price_from=COSTS_FILTERS[item][1], price_to=COSTS_FILTERS[item][2])
+            product = await db_commands.select_products(price_from=COSTS_FILTERS[item][1],
+                                                        price_to=COSTS_FILTERS[item][2])
             if len(product) > 0:
                 for pr in product:
                     media_path = fr"{MEDIA_ROOT}/{pr['photo']}"
@@ -84,29 +98,61 @@ async def set_chose_product(message: Message, state: FSMContext):
                 log.info(f'len product < 0 --------> {product}')
 
 
-@dp.message_handler(state=Funnel.chose_product)
-async def set_date(message: Message, state: FSMContext):
+@dp.message_handler(state=Funnel.delivery_address)
+async def set_delivery_address(message: Message, state: FSMContext):
     answer = message.text
-    if answer == 'Выбрать другой цеовой диапазон':
-        await message.answer(f"Создадим заказ\n"
-                             f"Введите адрес доставки в заданном формате:\n"
+    if answer == 'Выбрать другой ценовой диапазон':
+        # Get all market's city in application
+        cities = await db_commands.select_all_cities()
+        # Create keyboard
+        keyboard = menu_order.key_builder(cities, 'city')
+
+        await message.answer(f"Создание заказа...\nУкажите город", reply_markup=keyboard)
+        await Funnel.first()
+
+    else:
+        await message.answer(f"Введите адрес доставки в заданном формате:\n"
                              f"<code>Садовая 21</code>.\n"
                              f"Или передайте свои координаты",
                              reply_markup=menu_order.delivery_point
                              )
-        await Funnel.first()
-    else:
-        await message.answer(f"Выбран {answer}", reply_markup=ReplyKeyboardRemove())
+
         async with state.proxy() as data:
             data['chosen_product'] = answer
-
-        await message.answer("Укажите дату и время доставки: ", reply_markup=await SimpleCalendar().start_calendar())
 
         await Funnel.next()
 
 
-@dp.callback_query_handler(simple_cal_callback.filter(), state=Funnel.set_date)
-async def process_simple_calendar(callback_query: CallbackQuery, callback_data: dict, state: FSMContext):
+@dp.message_handler(state=Funnel.set_date, content_types=types.ContentType.LOCATION)
+async def set_delivery_date(message: Message, state: FSMContext):
+    answer = message.text
+    await message.answer(f"Введен адрес: {answer}", reply_markup=ReplyKeyboardRemove())
+
+    await message.answer("Укажите дату и время доставки: ", reply_markup=await SimpleCalendar().start_calendar())
+
+    location = message.location
+    latitude = location.latitude
+    longitude = location.longitude
+    async with state.proxy() as data:
+        data['delivery_address'] = (latitude, longitude)
+
+    await Funnel.next()
+
+
+@dp.message_handler(state=Funnel.set_date)
+async def set_delivery_date(message: Message, state: FSMContext):
+    answer = message.text
+    await message.answer(f"Введены координаты: {answer}", reply_markup=ReplyKeyboardRemove())
+    async with state.proxy() as data:
+        data['delivery_address'] = answer
+    await Funnel.next()
+
+    await message.answer("Укажите дату и время доставки: ", reply_markup=await SimpleCalendar().start_calendar())
+
+
+
+@dp.callback_query_handler(simple_cal_callback.filter(), state=Funnel.set_time)
+async def set_delivery_time(callback_query: CallbackQuery, callback_data: dict, state: FSMContext):
     selected, date = await SimpleCalendar().process_selection(callback_query, callback_data)
     if selected:
         menu_order.inline_timepicker.init(
@@ -123,7 +169,7 @@ async def process_simple_calendar(callback_query: CallbackQuery, callback_data: 
         await Funnel.next()
 
 
-@dp.callback_query_handler(menu_order.inline_timepicker.filter(), state=Funnel.set_time)
+@dp.callback_query_handler(menu_order.inline_timepicker.filter(), state=Funnel.contact_phone)
 async def set_contact_phone(query: types.CallbackQuery, callback_data: Dict[str, str],
                             state: FSMContext):
     handle_result = menu_order.inline_timepicker.handle(query.from_user.id, callback_data)
@@ -145,7 +191,7 @@ async def set_contact_phone(query: types.CallbackQuery, callback_data: Dict[str,
                                             reply_markup=menu_order.inline_timepicker.get_keyboard())
 
 
-@dp.message_handler(state=Funnel.contact_phone, content_types=types.ContentType.CONTACT)
+@dp.message_handler(state=Funnel.order_confirming, content_types=types.ContentType.CONTACT)
 async def confirming_order(message: Message, state: FSMContext):
     await message.answer(f"Подтверждение заказа:", reply_markup=menu_order.confirm_order)
     cont = message.contact
@@ -160,11 +206,13 @@ async def confirming_order(message: Message, state: FSMContext):
 
     data = await state.get_data()
     await message.answer(f"Параметры заказа:\n"
+                         f"Город: <code>{data['City']}</code>\n"
+                         f"Магазин: <code>{data['Store']}</code>\n"
                          f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
                          f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
                          f"Товар: <code>{data['chosen_product']}</code>\n"
-                         f"Дата доставки: <code>{data['delivery_date']}</code>\n"
-                         f"Время доставки: <code>{data['delivery_time']}</code>\n"
+                         # f"Дата доставки: <code>{data['delivery_date']}</code>\n"
+                         # f"Время доставки: <code>{data['delivery_time']}</code>\n"
                          )
 
     await Funnel.next()
@@ -180,7 +228,7 @@ async def order_done(message: Message, state: FSMContext):
 
     await message.answer(f"Заказ создан, ожидайте звонка", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
-    managers = await select_all_managers()
+    managers = await db_commands.select_all_managers()
 
     for manag in managers:
         try:
@@ -201,26 +249,26 @@ async def order_done(message: Message, state: FSMContext):
         except Exception as err:
             logging.exception(err)
 
-    customer = await select_customer(telegram_id=telegram_id)
-    await add_order(customer_id=customer,
-                    product_id=data['chosen_product'].split()[0][:-1],
-                    telegram_id=telegram_id,
-                    shipping_address=data['delivery_address'],
-                    phone_number=data['contact']['phone'],
-                    email='-',
-                    )
+    customer = await db_commands.select_customer(telegram_id=telegram_id)
+    await db_commands.add_order(customer_id=customer,
+                                product_id=data['chosen_product'].split()[0][:-1],
+                                telegram_id=telegram_id,
+                                shipping_address=data['delivery_address'],
+                                phone_number=data['contact']['phone'],
+                                email='-',
+                                )
 
     await state.finish()
 
 
 @dp.message_handler(state=Funnel.is_order_confirm, text="Исправить заказ")
 async def try_again(message: Message, state: FSMContext):
-    await message.answer(f"Создадим заказ\n"
-                         f"Введите адрес доставки в заданном формате:\n"
-                         f"<code>Садовая 21</code>.\n"
-                         f"Или передайте свои координаты",
-                         reply_markup=menu_order.delivery_point
-                         )
+    # Get all market's city in application
+    cities = await db_commands.select_all_cities()
+    # Create keyboard
+    keyboard = menu_order.key_builder(cities, 'city')
+    await message.answer(f"Создание заказа...\nУкажите город", reply_markup=keyboard)
+
     answer = message.text
     async with state.proxy() as data:
         data['order_confirmed'] = answer
