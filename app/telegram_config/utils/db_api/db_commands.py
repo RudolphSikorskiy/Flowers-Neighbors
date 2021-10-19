@@ -55,12 +55,33 @@ def select_products(price_from, price_to):
     log.info(f'{price_from} {price_to}')
     lst = []
     try:
-        product = Product.objects.filter(price__range=[Decimal(price_from), Decimal(price_to)])
+        products = Product.objects.filter(price__range=[Decimal(price_from), Decimal(price_to)])
     except Exception as err:
         log.info(f'ERROR --------> {err}')
         return None
     else:
-        for pr in product:
+        for pr in products:
+            lst.append(dict(id=pr.id,
+                            name=pr.name,
+                            photo=pr.photo,
+                            price=pr.price,
+                            description=pr.description,
+                            ))
+        return lst
+
+
+@sync_to_async
+def select_products_from_store(price_from, price_to, store):
+    log.info(f'{store} {price_from} {price_to}')
+    lst = []
+    try:
+        products = Product.objects.filter(productinstore__store=store,
+                                          price__range=[Decimal(price_from), Decimal(price_to)])
+    except Exception as err:
+        log.info(f'ERROR --------> {err}')
+        return None
+    else:
+        for pr in products:
             lst.append(dict(id=pr.id,
                             name=pr.name,
                             photo=pr.photo,
@@ -90,10 +111,25 @@ def select_all_cities():
 
 @sync_to_async
 def select_all_stores(city):
-
     stores = Store.objects.values('id', 'name', 'city', 'street', 'house').filter(city=city)
     log.warning(list(stores))
     return list(stores)
+
+
+@sync_to_async
+def select_store(id):
+    store = Store.objects.get(id=id)
+
+    return dict(id=store.id,
+                name=store.name,
+                city=store.city,
+                street=store.street,
+                house=store.house,
+                latitude=store.latitude,
+                longitude=store.longitude,
+                phone_number=store.phone_number,
+                email=store.email,
+                )
 
 # 1. You should import models from django app
 # from makret.models import Customer

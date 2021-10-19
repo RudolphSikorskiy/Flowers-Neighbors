@@ -40,18 +40,33 @@ Uses gunicorn + nginx.
     ```
 6. Create createsuperuser
     ```sh
-    docker-compose -f docker-compose.prod.yml exec web python manage.py createsuperuser --username Sikorskiy --email numbern19@gmail.com
+    docker-compose -f docker-compose.prod.yml exec web python manage.py createsuperuser --username sikorskiy --email numbern19@gmail.com
     ```
 Test it out at [http://localhost:1337](http://localhost:1337). No mounted folders. To apply changes, the image must be re-built.
 
-### Save and Load via .tar 
+### Save via .tar 
 ```sh
+    docker images
     docker save 34fb1b2429d9 > bot.tar
-    docker load --input verse_gapminder.tar
+```
+### Load and Deploy via .tar 
+```sh
+docker load --input postgres.tar
+docker load --input flowers-neighbors_bot.tar
+docker load --input flowers-neighbors_web.tar
+docker load --input flowers-neighbors_nginx.tar
+
+docker tag e7a27c1ba758 nginx:v1
+docker tag 4ab1311f73e0 web_bot:v1
+docker tag 700e581c202e postgres:v1
+
+docker-compose -f docker-compose.prod_s.yml up -d --build
+docker-compose -f docker-compose.prod_s.yml exec web python manage.py migrate --noinput
+docker-compose -f docker-compose.prod_s.yml exec web python manage.py collectstatic --no-input --clear
+docker-compose -f docker-compose.prod_s.yml exec web python manage.py createsuperuser --username sikorskiy --email numbern19@gmail.com
 ```
 ### TAG and Push to DockerHUB 
 ```sh
-    docker images
     docker login
     docker tag IMAGE_ID_bb38976d03cf softhardsolutions/web:version
     docker push softhardsolutions/web

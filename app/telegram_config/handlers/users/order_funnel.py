@@ -57,8 +57,10 @@ async def set_price_range(message: Message, state: FSMContext):
         await Funnel.first()
 
     else:
+        id = answer.split(',')[0][1:]
+        await db_commands.select_store(id)
         async with state.proxy() as data:
-            data['Store'] = answer
+            data['Store'] = id, answer
 
         await message.answer(f"Выберите ценовой диапазон\n", reply_markup=menu_order.chose_cost)
 
@@ -71,11 +73,12 @@ async def set_chose_product(message: Message, state: FSMContext):
     fullname = message.from_user.full_name
     username = message.from_user.username
     telegram_id = message.from_user.id
-
+    data = await state.get_data()
     for item in COSTS_FILTERS.keys():
         if answer in COSTS_FILTERS[item][0]:
-            product = await db_commands.select_products(price_from=COSTS_FILTERS[item][1],
-                                                        price_to=COSTS_FILTERS[item][2])
+            product = await db_commands.select_products_from_store(price_from=COSTS_FILTERS[item][1],
+                                                                   price_to=COSTS_FILTERS[item][2],
+                                                                   store=data['Store'][0])
             if len(product) > 0:
                 for pr in product:
                     media_path = fr"{MEDIA_ROOT}/{pr['photo']}"
@@ -126,7 +129,7 @@ async def set_delivery_address(message: Message, state: FSMContext):
 @dp.message_handler(state=Funnel.set_date, content_types=types.ContentType.LOCATION)
 async def set_delivery_date(message: Message, state: FSMContext):
     answer = message.text
-    await message.answer(f"Введен адрес: {answer}", reply_markup=ReplyKeyboardRemove())
+    await message.answer(f"Введены координаты: {answer}", reply_markup=ReplyKeyboardRemove())
 
     await message.answer("Укажите дату и время доставки: ", reply_markup=await SimpleCalendar().start_calendar())
 
@@ -142,13 +145,12 @@ async def set_delivery_date(message: Message, state: FSMContext):
 @dp.message_handler(state=Funnel.set_date)
 async def set_delivery_date(message: Message, state: FSMContext):
     answer = message.text
-    await message.answer(f"Введены координаты: {answer}", reply_markup=ReplyKeyboardRemove())
+    await message.answer(f"Введен адрес: {answer}", reply_markup=ReplyKeyboardRemove())
     async with state.proxy() as data:
         data['delivery_address'] = answer
     await Funnel.next()
 
     await message.answer("Укажите дату и время доставки: ", reply_markup=await SimpleCalendar().start_calendar())
-
 
 
 @dp.callback_query_handler(simple_cal_callback.filter(), state=Funnel.set_time)
@@ -211,8 +213,8 @@ async def confirming_order(message: Message, state: FSMContext):
                          f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
                          f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
                          f"Товар: <code>{data['chosen_product']}</code>\n"
-                         # f"Дата доставки: <code>{data['delivery_date']}</code>\n"
-                         # f"Время доставки: <code>{data['delivery_time']}</code>\n"
+                         f"Дата доставки: <code>{data['delivery_date']}</code>\n"
+                         f"Время доставки: <code>{data['delivery_time']}</code>\n"
                          )
 
     await Funnel.next()

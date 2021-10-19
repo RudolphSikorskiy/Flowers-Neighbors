@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # Create your models here.
 
 class TimedBaseModel(models.Model):
@@ -95,7 +96,7 @@ class ProductInStore(TimedBaseModel):
     id = models.AutoField(primary_key=True)
     store = models.ForeignKey(Store, verbose_name="Идентификатор магазина", on_delete=models.SET(0))
     product = models.ForeignKey(Product, verbose_name="Идентификатор Товара", on_delete=models.SET(0))
-    quantity = models.IntegerField(verbose_name="Количество")
+    quantity = models.IntegerField(verbose_name="Количество", default=1)
 
     def __str__(self):
         return f"№{self.id} {self.store} {self.product} {self.quantity}"

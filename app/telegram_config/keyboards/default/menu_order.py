@@ -77,7 +77,8 @@ def key_builder_stores(data):
     for item in data:
         buttons.append(
             [
-                KeyboardButton(text=f'{item["name"]}, {item["city"]}, ул,{item["street"]}, дом {item["house"]}'),
+                KeyboardButton(
+                    text=f'№{item["id"]}, {item["name"]}, {item["city"]}, ул,{item["street"]}, дом {item["house"]}'),
             ]
         )
     buttons.append([KeyboardButton(text='Выбрать другой город')])

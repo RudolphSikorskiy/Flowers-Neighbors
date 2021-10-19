@@ -7,3 +7,4 @@ __pycache
 /.idea/
 /app/staticfiles/
 /.env.dev.db
+/venv/
