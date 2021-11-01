@@ -20,6 +20,7 @@ Uses gunicorn + nginx.
 3. Build the images and run the containers:
 ```sh
     docker-compose -f docker-compose.prod.yml up -d --build
+    docker-compose -f docker-compose.prod.yml exec web python manage.py makemigrations --noinput
     docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput
     docker-compose -f docker-compose.prod.yml exec web python manage.py collectstatic --no-input --clear
     docker-compose -f docker-compose.prod.yml exec web python manage.py createsuperuser --username sikorskiy --email numbern19@gmail.com
@@ -41,11 +42,6 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
     docker tag e7a27c1ba758 nginx:v1
     docker tag 4ab1311f73e0 web_bot:v1
     docker tag 700e581c202e postgres:v1
-    
-    docker-compose -f docker-compose.prod_s.yml up -d --build
-    docker-compose -f docker-compose.prod_s.yml exec web python manage.py migrate --noinput
-    docker-compose -f docker-compose.prod_s.yml exec web python manage.py collectstatic --no-input --clear
-    docker-compose -f docker-compose.prod_s.yml exec web python manage.py createsuperuser --username sikorskiy --email numbern19@gmail.com
 ```
 ### TAG and Push to DockerHUB 
 ```sh
@@ -58,6 +54,25 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
     docker-compose down --volumes
     docker system prune --all
     docker system df
+```
+
+### dump and refuse database from docker container
+```sh
+    - Создание дампа 
+    - только данные и в виде инсертов
+    docker exec -t flowers_db_1 pg_dumpall -a --column-inserts -U sikorskiy > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+    - Показать созданные базы данных в контейнере
+    docker exec flowers-neighbors_db_1 psql -U sikorskiy -l
+    - интерактивный psql в контейнере
+    docker exec -i flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev
+
+    - проброс архива с дампом в контейнер
+    docker cp dump_27-10-2021_17_55_24.tar flowers-neighbors_db_1:/var/lib/postgresql/data
+
+    - заливаем дамп через psql
+    docker exec flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_27-10-2021_17_55_24.sql
+    - копируем все медиа файлы
+    docker cp flowers_img flowers-neighbors_web_1:/home/app/web/mediafiles/
 ```
 
 ### Temporary environment
@@ -89,17 +104,4 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
     ECHO %DATABASE%
     ECHO %BOT_TOKEN%
     ECHO %ADMIN_ID% 
-```
-
-### dump and refuse database from docker container
-```sh
-    
-    docker exec -t flowers_db_1 pg_dumpall -c --format=c -U sikorskiy > dump_`date +%d-%m-%Y"_"%H_%M_%S`.tar
-
-    docker exec flowers-neighbors_db_1 psql -U sikorskiy -l
-
-    docker exec -i flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev
-
-    docker cp dump_27-10-2021_17_55_24.tar flowers-neighbors_db_1:/var/lib/postgresql/data
-    docker exec flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_27-10-2021_17_55_24.sql
 ```
