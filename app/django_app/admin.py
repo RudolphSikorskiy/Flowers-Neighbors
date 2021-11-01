@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Customer, Manager, Store, Product, ProductInStore, Order
+from .models import Customer, Manager, Store, Product, ProductInStore, Order, StoreManager
 
 
 # Register your models here.
@@ -39,7 +39,14 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductInStore)
 class ProductInStoreAdmin(admin.ModelAdmin):
-    list_display = ("id", "store", "product", 'created_at', 'updated_at')
+    list_display = ("id", "store", "product", 'created_at', 'updated_at')  #
+    list_filter = ("store",)
+
+
+@admin.register(StoreManager)
+class StoreManagersAdmin(admin.ModelAdmin):
+    list_display = ("id", "store", "manager", 'created_at', 'updated_at')
+    list_filter = ("store", "manager",)
 
 
 @admin.register(Order)

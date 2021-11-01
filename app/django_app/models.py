@@ -104,6 +104,16 @@ class ProductInStore(TimedBaseModel):
         return f"№{self.id} {self.store} {self.product} {self.quantity}"
 
 
+class StoreManager(TimedBaseModel):
+    class Meta:
+        verbose_name = "Рассылка менеджеру"
+        verbose_name_plural = "Рассылки менеджерам"
+
+    id = models.AutoField(primary_key=True)
+    store = models.ForeignKey(Store, verbose_name="Идентификатор магазина", on_delete=models.SET(0))
+    manager = models.ForeignKey(Manager, verbose_name="Идентификатор Менеджера", on_delete=models.SET(0))
+
+
 class Order(TimedBaseModel):
     class Meta:
         verbose_name = "Заказ"
