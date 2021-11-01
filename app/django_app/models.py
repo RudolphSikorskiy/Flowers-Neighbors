@@ -40,12 +40,13 @@ class Customer(TimedBaseModel):
     email = models.CharField(verbose_name="Email", max_length=100, null=True)
 
     def __str__(self):
-        return str(dict(id=self.id,
-                        full_name=self.full_name,
-                        username=self.username,
-                        phone=self.phone,
-                        telegram_id=self.telegram_id,
-                        email=self.email))
+        # return str(dict(id=self.id,
+        #                 full_name=self.full_name,
+        #                 username=self.username,
+        #                 phone=self.phone,
+        #                 telegram_id=self.telegram_id,
+        #                 email=self.email))
+        return f"№{self.id} - {self.full_name}"
 
 
 class Store(TimedBaseModel):
@@ -64,7 +65,7 @@ class Store(TimedBaseModel):
     email = models.CharField(verbose_name="Email", max_length=100, null=True)
 
     def __str__(self):
-        return f"№{self.id} - {self.name})"
+        return f"№{self.id} - {self.name}, {self.city}"
 
 
 class Product(TimedBaseModel):
@@ -80,12 +81,13 @@ class Product(TimedBaseModel):
     description = models.TextField(verbose_name="Описание", max_length=3000, null=True)
 
     def __str__(self):
-        return str(dict(id=self.id,
-                        name=self.name,
-                        photo=self.photo,
-                        price=self.price,
-                        description=self.description,
-                        ))
+        # return str(dict(id=self.id,
+        #                 name=self.name,
+        #                 photo=self.photo,
+        #                 price=self.price,
+        #                 description=self.description,
+        #                 ))
+        return f"№{self.id} - {self.name}, {self.price}"
 
 
 class ProductInStore(TimedBaseModel):
