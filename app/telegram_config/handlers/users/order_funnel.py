@@ -4,6 +4,8 @@ from aiogram.dispatcher.filters import Command
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InputFile, ReplyKeyboardMarkup
 from aiogram_calendar import simple_cal_callback, SimpleCalendar, dialog_cal_callback, DialogCalendar
 
+from telegram_config.data.config import ADMIN_ID
+from telegram_config.handlers.users.start import check_customer
 from telegram_config.keyboards.default import menu_order
 from telegram_config.keyboards.default.menu_order import COSTS_FILTERS
 from telegram_config.loader import dp, bot
@@ -20,6 +22,7 @@ log = logging.getLogger(__name__)
 
 @dp.message_handler(Command('order'))
 async def start_order(message: Message):
+    await check_customer(message)
     # Get all market's city in application
     cities = await db_commands.select_all_cities()
     # Create keyboard
@@ -114,15 +117,14 @@ async def set_delivery_address(message: Message, state: FSMContext):
         await Funnel.first()
 
     else:
+        async with state.proxy() as data:
+            data['chosen_product'] = answer
+
         await message.answer(f"Введите адрес доставки в заданном формате:\n"
                              f"<code>Садовая 21</code>.\n"
                              f"Или передайте свои координаты",
                              reply_markup=menu_order.delivery_point
                              )
-
-        async with state.proxy() as data:
-            data['chosen_product'] = answer
-
         await Funnel.next()
 
 
@@ -197,7 +199,6 @@ async def set_contact_phone(query: types.CallbackQuery, callback_data: Dict[str,
 async def confirming_order(message: Message, state: FSMContext):
     await message.answer(f"Подтверждение заказа:", reply_markup=menu_order.confirm_order)
     cont = message.contact
-
     answer = message.text
     fullname = message.from_user.full_name
     username = message.from_user.username
@@ -207,16 +208,22 @@ async def confirming_order(message: Message, state: FSMContext):
         data['contact'] = dict(first_name=cont.first_name, last_name=cont.last_name, phone=cont.phone_number)
 
     data = await state.get_data()
-    await message.answer(f"Параметры заказа:\n"
-                         f"Город: <code>{data['City']}</code>\n"
-                         f"Магазин: <code>{data['Store']}</code>\n"
-                         f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
-                         f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
-                         f"Товар: <code>{data['chosen_product']}</code>\n"
-                         f"Дата доставки: <code>{data['delivery_date']}</code>\n"
-                         f"Время доставки: <code>{data['delivery_time']}</code>\n"
-                         )
-
+    try:
+        await message.answer(f"Параметры заказа:\n"
+                             f"Город: <code>{data['City']}</code>\n"
+                             f"Магазин: <code>{data['Store']}</code>\n"
+                             f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
+                             f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
+                             f"Товар: <code>{data['chosen_product']}</code>\n"
+                             f"Дата доставки: <code>{data['delivery_date']}</code>\n"
+                             f"Время доставки: <code>{data['delivery_time']}</code>\n"
+                             )
+    except KeyError as err:
+        log.error(f'{err}')
+        log.error(f'telegram_id={telegram_id}, {fullname}, {username}')
+        await dp.bot.send_message(ADMIN_ID,
+                                  f"Команда {answer} от пользователя:\n"
+                                  f"{telegram_id}, {fullname}, {username}")
     await Funnel.next()
 
 

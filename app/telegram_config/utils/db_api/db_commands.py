@@ -9,10 +9,9 @@ log = logging.getLogger(__name__)
 
 @sync_to_async
 def add_customer(telegram_id, fullname, username):
-    return Customer(full_name=fullname,
-                    username=username,
-                    telegram_id=telegram_id).save()
-
+    return Customer.objects.get_or_create(full_name=fullname,
+                                          username=username,
+                                          telegram_id=telegram_id)
 
 @sync_to_async
 def select_all_customers():
