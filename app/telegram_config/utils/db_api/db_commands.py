@@ -44,10 +44,31 @@ def select_all_managers():
             phone=mg.phone,
             telegram_id=mg.telegram_id,
             email=mg.email,
-        )
-        )
+        ))
 
     return lst
+
+
+@sync_to_async
+def select_managers_by_store(store):
+    log.info(f'select managers by store: {store}')
+    lst = []
+    try:
+        managers = Manager.objects.filter(storemanager__store=store)
+    except Exception as err:
+        log.info(f'ERROR --------> {err}')
+        return None
+    else:
+        for mg in managers:
+            lst.append(dict(
+                id=mg.id,
+                full_name=mg.full_name,
+                username=mg.username,
+                phone=mg.phone,
+                telegram_id=mg.telegram_id,
+                email=mg.email,
+            ))
+        return lst
 
 
 @sync_to_async

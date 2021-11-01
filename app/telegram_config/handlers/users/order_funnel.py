@@ -230,7 +230,8 @@ async def order_done(message: Message, state: FSMContext):
 
     await message.answer(f"Заказ создан, ожидайте звонка", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
-    managers = await db_commands.select_all_managers()
+    # managers = await db_commands.select_all_managers()
+    managers = await db_commands.select_managers_by_store(store=data['Store'][0])
 
     for manag in managers:
         try:

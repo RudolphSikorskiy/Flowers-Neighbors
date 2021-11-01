@@ -15,8 +15,8 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "email", "phone", 'created_at', 'updated_at')
-    list_editable = ("full_name", "username", "email", "phone")
+    list_display = ("id", "full_name", "username", "telegram_id", "email", "phone", 'created_at', 'updated_at')
+    list_editable = ("full_name", "username", "email", "phone", "telegram_id")
 
 
 @admin.register(Store)
