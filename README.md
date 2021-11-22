@@ -36,12 +36,11 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ### Load and Deploy via .tar 
 ```sh
     docker load --input postgres.tar
-    docker load --input flowers-neighbors_bot.tar
-    docker load --input flowers-neighbors_web.tar
-    docker load --input flowers-neighbors_nginx.tar
+    docker load --input web_bot_v2.1.0.tar
+    docker load --input nginx.tar
     
-    docker tag e7a27c1ba758 nginx:v1
-    docker tag 4ab1311f73e0 web_bot:v1
+    docker tag d7818e1517d8 nginx:v1.0.0
+    docker tag fcb95211b8a8 web_bot:v2.1.0
     docker tag 700e581c202e postgres:v1
 ```
 ### TAG and Push to DockerHUB 
@@ -62,18 +61,21 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
     - Создание дампа 
     - только данные и в виде инсертов
     docker exec -t flowers_db_1 pg_dumpall -a --column-inserts -U sikorskiy > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+
     - Показать созданные базы данных в контейнере
-    docker exec flowers-neighbors_db_1 psql -U sikorskiy -l
+    docker exec flowers_db_1 psql -U sikorskiy -l
     - интерактивный psql в контейнере
-    docker exec -i flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev
+    docker exec -i flowers_db_1 psql -U sikorskiy --dbname=db_dev
+    - интерактивный shell в контейнере
+    docker exec -it flowers_web_1 sh
 
     - проброс архива с дампом в контейнер
-    docker cp dump_27-10-2021_17_55_24.tar flowers-neighbors_db_1:/var/lib/postgresql/data
+    docker cp dump_22-11-2021_19_40_01.sql flowers_db_1:/var/lib/postgresql/data
 
     - заливаем дамп через psql
-    docker exec flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_27-10-2021_17_55_24.sql
+    docker exec flowers_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_22-11-2021_19_40_01.sql
     - копируем все медиа файлы
-    docker cp flowers_img flowers-neighbors_web_1:/home/app/web/mediafiles/
+    docker cp flowers_img flowers_web_1:/home/app/web/mediafiles/
 ```
 
 ### Temporary environment
@@ -93,16 +95,16 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ```
 ### Show Temporary environment
 ```sh
-    ECHO %DEBUG%
-    ECHO %SECRET_KEY%
-    ECHO %DJANGO_ALLOWED_HOSTS%
-    ECHO %SQL_ENGINE%
-    ECHO %SQL_DATABASE%
-    ECHO %SQL_USER%
-    ECHO %SQL_PASSWORD%
-    ECHO %SQL_HOST%
-    ECHO %SQL_PORT%
-    ECHO %DATABASE%
-    ECHO %BOT_TOKEN%
-    ECHO %ADMIN_ID% 
+    ECHO DEBUG: %DEBUG%
+    ECHO SECRET_KEY: %SECRET_KEY%
+    ECHO DJANGO_ALLOWED_HOSTS: %DJANGO_ALLOWED_HOSTS%
+    ECHO SQL_ENGINE: %SQL_ENGINE%
+    ECHO SQL_DATABASE: %SQL_DATABASE%
+    ECHO SQL_USER: %SQL_USER%
+    ECHO SQL_PASSWORD: %SQL_PASSWORD%
+    ECHO SQL_HOST: %SQL_HOST%
+    ECHO SQL_PORT: %SQL_PORT%
+    ECHO DATABASE: %DATABASE%
+    ECHO BOT_TOKEN: %BOT_TOKEN%
+    ECHO ADMIN_ID: %ADMIN_ID% 
 ```
