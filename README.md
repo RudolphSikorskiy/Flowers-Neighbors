@@ -30,7 +30,8 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ### Save via .tar 
 ```sh
     docker images
-    docker save 34fb1b2429d9 > bot.tar
+    name_v{models_number_version}.{models_app_version}.{models_fix_version}
+    docker save fcb95211b8a8 > web_bot_v2.1.0.tar
 ```
 ### Load and Deploy via .tar 
 ```sh

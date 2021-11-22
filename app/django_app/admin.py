@@ -9,8 +9,8 @@ from .models import Customer, Manager, Store, Product, ProductInStore, Order, St
 
 @admin.register(Customer)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "email", "phone", 'created_at', 'updated_at')
-    search_fields = ("full_name", "username", "email", "phone")
+    list_display = ("id", "full_name", "telegram_id", "username", "email", "phone", 'created_at', 'updated_at')
+    search_fields = ("id", "full_name", "telegram_id", "username", "email", "phone")
 
 
 @admin.register(Manager)

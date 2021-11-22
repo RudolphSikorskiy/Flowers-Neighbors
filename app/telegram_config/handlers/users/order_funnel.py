@@ -34,6 +34,7 @@ async def start_order(message: Message):
 
 @dp.message_handler(state=Funnel.market)
 async def set_market(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     answer = message.text
     async with state.proxy() as data:
         data['City'] = answer
@@ -49,6 +50,7 @@ async def set_market(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.price_range)
 async def set_price_range(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     answer = message.text
     if answer == 'Выбрать другой город':
         # Get all market's city in application
@@ -72,6 +74,7 @@ async def set_price_range(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.chose_product)
 async def set_chose_product(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     answer = message.text
     fullname = message.from_user.full_name
     username = message.from_user.username
@@ -106,6 +109,7 @@ async def set_chose_product(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.delivery_address)
 async def set_delivery_address(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     answer = message.text
     if answer == 'Выбрать другой ценовой диапазон':
         # Get all market's city in application
@@ -130,6 +134,7 @@ async def set_delivery_address(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.set_date, content_types=types.ContentType.LOCATION)
 async def set_delivery_date(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     answer = message.text
     await message.answer(f"Введены координаты: {answer}", reply_markup=ReplyKeyboardRemove())
 
@@ -146,6 +151,7 @@ async def set_delivery_date(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.set_date)
 async def set_delivery_date(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     answer = message.text
     await message.answer(f"Введен адрес: {answer}", reply_markup=ReplyKeyboardRemove())
     async with state.proxy() as data:
@@ -197,6 +203,7 @@ async def set_contact_phone(query: types.CallbackQuery, callback_data: Dict[str,
 
 @dp.message_handler(state=Funnel.order_confirming, content_types=types.ContentType.CONTACT)
 async def confirming_order(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     await message.answer(f"Подтверждение заказа:", reply_markup=menu_order.confirm_order)
     cont = message.contact
     answer = message.text
@@ -229,6 +236,7 @@ async def confirming_order(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.is_order_confirm, text="Подтвердить")
 async def order_done(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     username = message.from_user.username
     answer = message.text
     fullname = message.from_user.full_name
@@ -273,6 +281,7 @@ async def order_done(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Funnel.is_order_confirm, text="Исправить заказ")
 async def try_again(message: Message, state: FSMContext):
+    await check_customer(message, await state.get_state())
     # Get all market's city in application
     cities = await db_commands.select_all_cities()
     # Create keyboard
