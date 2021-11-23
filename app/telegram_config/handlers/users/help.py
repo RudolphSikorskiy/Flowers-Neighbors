@@ -1,17 +1,16 @@
+import logging
+
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandHelp
 
+from django_project.settings import MEDIA_ROOT
 from telegram_config.loader import dp
 from telegram_config.utils.misc import rate_limit
-
-import logging
-
-from django_project.settings import MEDIA_ROOT
 
 log = logging.getLogger(__name__)
 
 
-@rate_limit(5, 'help')
+@rate_limit(10, 'help')
 @dp.message_handler(CommandHelp())
 async def bot_help(message: types.Message):
     text = [

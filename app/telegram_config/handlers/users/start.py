@@ -1,10 +1,12 @@
-from aiogram import types
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.builtin import CommandStart
-from telegram_config.data.config import ADMIN_ID
-from telegram_config.loader import dp, storage
-from telegram_config.utils.db_api import db_commands
 import logging
+
+from aiogram import types
+from aiogram.dispatcher.filters.builtin import CommandStart
+
+from telegram_config.data.config import ADMIN_ID
+from telegram_config.loader import dp
+from telegram_config.utils.db_api import db_commands
+from telegram_config.utils.misc import rate_limit
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ async def check_customer(message: types.Message, state=None):
                                   )
 
 
+@rate_limit(10, 'help')
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
     await check_customer(message)
