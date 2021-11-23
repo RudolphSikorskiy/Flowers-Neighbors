@@ -19,6 +19,7 @@ Uses gunicorn + nginx.
 2. Update the environment variables.
 3. Build the images and run the containers:
 ```sh
+    docker-compose -f docker-compose.prod.yml up --build
     docker-compose -f docker-compose.prod.yml up -d --build
     docker-compose -f docker-compose.prod.yml exec web python manage.py makemigrations --noinput
     docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput
@@ -51,6 +52,7 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ```
 ### Clear
 ```sh
+    docker-compose -f docker-compose.prod.yml down --volumes
     docker-compose down --volumes
     docker system prune --all
     docker system df
