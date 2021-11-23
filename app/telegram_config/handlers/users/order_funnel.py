@@ -1,9 +1,14 @@
+import datetime
+import logging
+from typing import Dict
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InputFile, ReplyKeyboardMarkup
-from aiogram_calendar import simple_cal_callback, SimpleCalendar, dialog_cal_callback, DialogCalendar
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InputFile
+from aiogram_calendar import simple_cal_callback, SimpleCalendar
 
+from django_project.settings import MEDIA_ROOT
 from telegram_config.data.config import ADMIN_ID
 from telegram_config.handlers.users.start import check_customer
 from telegram_config.keyboards.default import menu_order
@@ -11,15 +16,12 @@ from telegram_config.keyboards.default.menu_order import COSTS_FILTERS
 from telegram_config.loader import dp, bot
 from telegram_config.states.states import Funnel
 from telegram_config.utils.db_api import db_commands
-from typing import Dict
-import datetime
-import logging
-
-from django_project.settings import MEDIA_ROOT
+from telegram_config.utils.misc import rate_limit
 
 log = logging.getLogger(__name__)
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(Command('order'))
 async def start_order(message: Message):
     await check_customer(message)
@@ -32,6 +34,7 @@ async def start_order(message: Message):
     await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.market)
 async def set_market(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -48,6 +51,7 @@ async def set_market(message: Message, state: FSMContext):
     await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.price_range)
 async def set_price_range(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -72,6 +76,7 @@ async def set_price_range(message: Message, state: FSMContext):
         await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.chose_product)
 async def set_chose_product(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -107,6 +112,7 @@ async def set_chose_product(message: Message, state: FSMContext):
                 log.info(f'len product < 0 --------> {product}')
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.delivery_address)
 async def set_delivery_address(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -132,6 +138,7 @@ async def set_delivery_address(message: Message, state: FSMContext):
         await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.set_date, content_types=types.ContentType.LOCATION)
 async def set_delivery_date(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -149,6 +156,7 @@ async def set_delivery_date(message: Message, state: FSMContext):
     await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.set_date)
 async def set_delivery_date(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -161,6 +169,7 @@ async def set_delivery_date(message: Message, state: FSMContext):
     await message.answer("Укажите дату и время доставки: ", reply_markup=await SimpleCalendar().start_calendar())
 
 
+@rate_limit(1, 'order')
 @dp.callback_query_handler(simple_cal_callback.filter(), state=Funnel.set_time)
 async def set_delivery_time(callback_query: CallbackQuery, callback_data: dict, state: FSMContext):
     selected, date = await SimpleCalendar().process_selection(callback_query, callback_data)
@@ -179,6 +188,7 @@ async def set_delivery_time(callback_query: CallbackQuery, callback_data: dict, 
         await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.callback_query_handler(menu_order.inline_timepicker.filter(), state=Funnel.contact_phone)
 async def set_contact_phone(query: types.CallbackQuery, callback_data: Dict[str, str],
                             state: FSMContext):
@@ -201,6 +211,7 @@ async def set_contact_phone(query: types.CallbackQuery, callback_data: Dict[str,
                                             reply_markup=menu_order.inline_timepicker.get_keyboard())
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.order_confirming, content_types=types.ContentType.CONTACT)
 async def confirming_order(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -229,11 +240,13 @@ async def confirming_order(message: Message, state: FSMContext):
         log.error(f'{err}')
         log.error(f'telegram_id={telegram_id}, {fullname}, {username}')
         await dp.bot.send_message(ADMIN_ID,
+                                  f"Ошибка KeyError {err}\n"
                                   f"Команда {answer} от пользователя:\n"
                                   f"{telegram_id}, {fullname}, {username}")
     await Funnel.next()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.is_order_confirm, text="Подтвердить")
 async def order_done(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
@@ -287,6 +300,7 @@ async def order_done(message: Message, state: FSMContext):
     await state.finish()
 
 
+@rate_limit(1, 'order')
 @dp.message_handler(state=Funnel.is_order_confirm, text="Исправить заказ")
 async def try_again(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
