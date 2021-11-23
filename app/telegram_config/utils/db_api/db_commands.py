@@ -13,6 +13,7 @@ def add_customer(telegram_id, fullname, username):
                                           username=username,
                                           telegram_id=telegram_id)
 
+
 @sync_to_async
 def select_all_customers():
     customers = Customer.objects.all()
@@ -112,15 +113,17 @@ def select_products_from_store(price_from, price_to, store):
 
 
 @sync_to_async
-def add_order(customer_id, product_id, telegram_id, shipping_address,
+def add_order(product_id, telegram_id, shipping_address,
               phone_number,
               email,
               ):
-    return Order(customer_id=Customer.objects.get(telegram_id=telegram_id),
-                 product_id=Product.objects.get(id=product_id),
-                 shipping_address=shipping_address,
-                 phone_number=phone_number,
-                 email=email).save()
+    new = Order(customer_id=Customer.objects.get(telegram_id=telegram_id),
+                product_id=Product.objects.get(id=product_id),
+                shipping_address=shipping_address,
+                phone_number=phone_number,
+                email=email)
+    new.save()
+    return new.id
 
 
 @sync_to_async

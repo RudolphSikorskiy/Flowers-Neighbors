@@ -238,43 +238,51 @@ async def confirming_order(message: Message, state: FSMContext):
 async def order_done(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
     username = message.from_user.username
-    answer = message.text
-    fullname = message.from_user.full_name
-    username = message.from_user.username
     telegram_id = message.from_user.id
 
     await message.answer(f"Заказ создан, ожидайте звонка", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
-    # managers = await db_commands.select_all_managers()
     managers = await db_commands.select_managers_by_store(store=data['Store'][0])
+
+    new_order_num = await db_commands.add_order(
+        product_id=data['chosen_product'].split()[0][:-1],
+        telegram_id=telegram_id,
+        shipping_address=data['delivery_address'],
+        phone_number=data['contact']['phone'],
+        email='-',
+    )
+    await dp.bot.send_message(
+        chat_id=ADMIN_ID,
+        text=f"Получен заказ №<code>{new_order_num}</code>!\n"
+             f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
+             f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
+             f"Товар: <code>{data['chosen_product']}</code>\n"
+             f"Дата доставки: <code>{data['delivery_date']}</code>\n"
+             f"Время доставки: <code>{data['delivery_time']}</code>\n"
+             f"Заказчик: <code>{data['contact']['first_name']}"
+             f" {data['contact']['last_name']}</code>\n"
+             f"Телефон: <code>{data['contact']['phone']}</code>\n"
+             f"Telegram: <code>@{username}</code>"
+    )
 
     for manag in managers:
         try:
             await dp.bot.send_message(
-                manag["telegram_id"],
-                f"Получен заказ:\n"
-                f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
-                f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
-                f"Товар: <code>{data['chosen_product']}</code>\n"
-                f"Дата доставки: <code>{data['delivery_date']}</code>\n"
-                f"Время доставки: <code>{data['delivery_time']}</code>\n"
-                f"Заказчик: <code>{data['contact']['first_name']}"
-                f" {data['contact']['last_name']}</code>\n"
-                f"Телефон: <code>{data['contact']['phone']}</code>\n"
-                f"Telegram: <code>@{username}</code>"
+                chat_id=manag["telegram_id"],
+                text=f"Получен заказ №<code>{new_order_num}</code>!\n"
+                     f"Адрес доставки: <code>{data['delivery_address']}</code>\n"
+                     f"Ценовой диапазон: <code>{data['price_range']}</code>\n"
+                     f"Товар: <code>{data['chosen_product']}</code>\n"
+                     f"Дата доставки: <code>{data['delivery_date']}</code>\n"
+                     f"Время доставки: <code>{data['delivery_time']}</code>\n"
+                     f"Заказчик: <code>{data['contact']['first_name']}"
+                     f" {data['contact']['last_name']}</code>\n"
+                     f"Телефон: <code>{data['contact']['phone']}</code>\n"
+                     f"Telegram: <code>@{username}</code>"
             )
 
         except Exception as err:
             logging.exception(err)
-
-    customer = await db_commands.select_customer(telegram_id=telegram_id)
-    await db_commands.add_order(customer_id=customer,
-                                product_id=data['chosen_product'].split()[0][:-1],
-                                telegram_id=telegram_id,
-                                shipping_address=data['delivery_address'],
-                                phone_number=data['contact']['phone'],
-                                email='-',
-                                )
 
     await state.finish()
 
