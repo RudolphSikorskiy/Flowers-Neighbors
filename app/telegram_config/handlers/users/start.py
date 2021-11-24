@@ -2,6 +2,7 @@ import logging
 
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
+from aiogram.types import ReplyKeyboardRemove
 
 from telegram_config.data.config import ADMIN_ID
 from telegram_config.loader import dp
@@ -33,19 +34,10 @@ async def check_customer(message: types.Message, state=None):
                                   # f"Телефон: <code>{customer['phone']}</code>\n"
                                   )
 
-
-@rate_limit(10, 'help')
+@rate_limit(1, 'start')
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
     await check_customer(message)
-    await message.answer(f'Привет, {message.from_user.full_name}!\nИспользуй /order чтобы сделать заказ')
-    # TODO check_FSM for each customer
-    # fullname = message.from_user.full_name
-    # username = message.from_user.username
-    # telegram_id = message.from_user.id
-    # fsm = FSMContext(storage, 319555949, 319555949)
-    # fsm2 = FSMContext(storage, 1437069793, 1437069793)
-    # log.info(f'from {telegram_id}: about 319555949 {await fsm.get_state()}')
-    # log.info(f'from {telegram_id}: about 319555949 {await fsm.get_data()}')
-    # log.info(f'from {telegram_id}: about 1437069793 {await fsm2.get_state()}')
-    # log.info(f'from {telegram_id}: about 1437069793 {await fsm2.get_data()}')
+    await message.answer(f'Привет, {message.from_user.full_name}!\n'
+                         f'Используй /order чтобы сделать заказ\n',
+                         reply_markup=ReplyKeyboardRemove())

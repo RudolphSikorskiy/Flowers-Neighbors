@@ -71,7 +71,7 @@ async def set_price_range(message: Message, state: FSMContext):
         async with state.proxy() as data:
             data['Store'] = id, answer
 
-        await message.answer(f"Выберите ценовой диапазон\n", reply_markup=menu_order.chose_cost)
+        await message.answer(f"Укажите ценовой диапазон\n", reply_markup=menu_order.chose_cost)
 
         await Funnel.next()
 
@@ -80,6 +80,7 @@ async def set_price_range(message: Message, state: FSMContext):
 @dp.message_handler(state=Funnel.chose_product)
 async def set_chose_product(message: Message, state: FSMContext):
     await check_customer(message, await state.get_state())
+    await message.answer(f"Наш асортимент в выбранном диапазоне", reply_markup=ReplyKeyboardRemove())
     answer = message.text
     fullname = message.from_user.full_name
     username = message.from_user.username
