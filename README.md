@@ -61,23 +61,27 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ### dump and refuse database from docker container
 ```sh
     - Создание дампа 
-    - только данные и в виде инсертов
-    docker exec -t flowers_db_1 pg_dumpall -a --column-inserts -U sikorskiy > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+        - только данные и в виде инсертов
+        docker exec -t flowers_db_1 pg_dumpall -a --column-inserts -U sikorskiy > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
 
     - Показать созданные базы данных в контейнере
-    docker exec flowers_db_1 psql -U sikorskiy -l
+        docker exec flowers_db_1 psql -U sikorskiy -l
     - интерактивный psql в контейнере
-    docker exec -i flowers_db_1 psql -U sikorskiy --dbname=db_dev
+        docker exec -i flowers_db_1 psql -U sikorskiy --dbname=db_dev
     - интерактивный shell в контейнере
-    docker exec -it flowers_web_1 sh
+        docker exec -it flowers_web_1 sh
+        docker exec -it flowers-neighbors_web_1 sh
 
     - проброс архива с дампом в контейнер
-    docker cp dump_22-11-2021_19_40_01.sql flowers_db_1:/var/lib/postgresql/data
+        docker cp dump_22-11-2021_19_40_01.sql flowers_db_1:/var/lib/postgresql/data
+        docker cp dump_22-11-2021_19_40_01.sql flowers-neighbors_db_1:/var/lib/postgresql/data
 
     - заливаем дамп через psql
-    docker exec flowers_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_22-11-2021_19_40_01.sql
+        docker exec flowers_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_22-11-2021_19_40_01.sql
+        docker exec flowers-neighbors_db_1 psql -U sikorskiy --dbname=db_dev -f /var/lib/postgresql/data/dump_22-11-2021_19_40_01.sql
     - копируем все медиа файлы
-    docker cp flowers_img flowers_web_1:/home/app/web/mediafiles/
+        docker cp flowers_img flowers_web_1:/home/app/web/mediafiles/
+        docker cp flowers_img flowers-neighbors_web_1:/home/app/web/mediafiles/
 ```
 
 ### Temporary environment
