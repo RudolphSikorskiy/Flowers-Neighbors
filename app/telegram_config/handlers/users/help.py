@@ -15,10 +15,9 @@ log = logging.getLogger(__name__)
 async def bot_help(message: types.Message):
     text = [
         'Список команд: ',
-        '/start - Начать диалог',
+        '/start - Начать работу или перезагруить бота',
         '/order - Создать заказ',
-        '/reset - Перезагрузить бота',
-        '/help - Получить справку'
+        '/help - Получить справку с видеоинструкцией'
     ]
     await message.answer('\n'.join(text))
     media_path = fr"{MEDIA_ROOT}/manual.mp4"
