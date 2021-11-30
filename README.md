@@ -37,11 +37,11 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ### Load and Deploy via .tar 
 ```sh
     docker load --input postgres.tar
-    docker load --input web_bot_v2.1.0.tar
+    docker load --input web_bot_v2.2.0.tar
     docker load --input nginx.tar
     
     docker tag d7818e1517d8 nginx:v1.0.0
-    docker tag fcb95211b8a8 web_bot:v2.1.0
+    docker tag 775a29738710 web_bot:v2.2.0
     docker tag 700e581c202e postgres:v1
 ```
 ### TAG and Push to DockerHUB 
@@ -52,8 +52,8 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ```
 ### Clear
 ```sh
-    docker-compose -f docker-compose.prod.yml down --volumes
     docker-compose down --volumes
+    docker-compose -f docker-compose.prod.yml down --volumes 
     docker system prune --all
     docker system df
 ```
@@ -63,6 +63,8 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
     - Создание дампа 
         - только данные и в виде инсертов
         docker exec -t flowers_db_1 pg_dumpall -a --column-inserts -U sikorskiy > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+        - сохраняем изображения 
+        docker cp flowers_web_1:/home/app/web/mediafiles/ buckup_img_`date +%d-%m-%Y"_"%H_%M_%S`
 
     - Показать созданные базы данных в контейнере
         docker exec flowers_db_1 psql -U sikorskiy -l
@@ -87,17 +89,22 @@ Test it out at [http://localhost:1337](http://localhost:1337). No mounted folder
 ### Temporary environment
 ```sh
     SET DEBUG=1
-    SET SECRET_KEY=my_key
-    SET DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+
+    SET SECRET_KEY=7=+z8_+ez%6g07@!mz1vt!@!ak+g$10geio1t$ow^uu5qwa+8^
+
+
+    SET DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+
     SET SQL_ENGINE=django.db.backends.postgresql
-    SET SQL_DATABASE=db_dev
+
+    SET SQL_DATABASE=postgres
     SET SQL_USER=postgres
-    SET SQL_PASSWORD=my_password
+    SET SQL_PASSWORD=Tessera19
     SET SQL_HOST=localhost
     SET SQL_PORT=5432
     SET DATABASE=postgres
-    SET BOT_TOKEN=bot_token
-    SET ADMIN_ID=my_admin
+    SET BOT_TOKEN=1016008963:AAGPz4bTMH3GazObN4d9Pz0U8lATgvn4zrM
+    SET ADMIN_ID=319555949
 ```
 ### Show Temporary environment
 ```sh
